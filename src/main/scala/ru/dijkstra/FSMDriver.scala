@@ -57,22 +57,18 @@ class FSMDriver(driven : FSM) {
 
 
   def normalForm {
-    val il = states partition(_.allow)
-    val groups = new mutable.HashMap[State, Int]()
+    var il = states partition(_.allow)
+    var groups = new mutable.HashMap[State, Int]()
+    def stateByName(name: String) = states find( _.name == name ) get
     def out(sym: String, state: State) = (state tableRow) find( _.symbol == sym ) match {
-      case Some(x) => groups get(state) getOrElse(-1)
+      case Some(x) => { groups get(stateByName(x.newState)) get }
       case None => -1
     }
     def buildGroups = {
       val maxIndex = groups maxBy( _._2 ) _2
       var result = new ListBuffer[List[State]]()
-      for (i <- 0 until maxIndex) {              // = groups clone()
-        val groups2 : mutable.HashMap[State, Int]   = groups clone()
-        val a: mutable.HashMap[State, Int] = groups2 filter { _._2 == i }
-        ////
-        val b: Set[State] = a.map { _._1 } toSeq
-        val c = b toList
-        result.append(c)
+      for (i <- 0 until maxIndex + 1) {              // = groups clone()
+        result += groups.filter(_._2 == i).keys.toList
       }
       result toList
     }
@@ -87,7 +83,7 @@ class FSMDriver(driven : FSM) {
           buildGroups map {
             group => {
               val firstout = out(sym, group head)
-              if ((group forall(out(sym, _) == firstout)) == false) {
+              if ((group forall(a => out(sym, a) == firstout)) == false) {
                 val part = group partition(out(sym, _) == firstout)
                 (part _1) map { state => groups += (state -> firstout) }
                 (part _1) map { state => groups += (state -> newIndex) }
@@ -99,6 +95,24 @@ class FSMDriver(driven : FSM) {
         }
       }
     } while (changesMade)
-
+    val newNames = new mutable.HashMap[State, String]();
+    //
+    //println()
+    //groups map { gr => println(gr._1.name + " " + gr._2) }
+    //println()
+    //
+    groups map { gr => newNames += (gr._1 -> ("optimized_" + gr._2)) }
+    val newStates = states map {
+      state => {
+        val newName = newNames.get(state).get
+        val newAllow = state.allow
+        val newRow = state.tableRow map {
+          case TableNode(sym, state, _) => TableNode(sym, newNames.get(stateByName(state)).get, None)
+        }
+        State(newAllow, newName, newRow)
+      }
+    }
+    newStates sortWith { (a, b) => a.name == (newNames.head._2) }
+    states = (newStates toSet) toList
   }
 }
