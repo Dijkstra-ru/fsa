@@ -1,6 +1,6 @@
 import sbt._
 
-organization := "org.eiennohito"
+organization := "ru.dijkstra"
 
 name := "Test project"
 
