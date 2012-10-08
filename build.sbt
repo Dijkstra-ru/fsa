@@ -2,7 +2,7 @@ import sbt._
 
 organization := "ru.dijkstra"
 
-name := "Test project"
+name := "Finite State Machine homework"
 
 version := "0.1-SNAPSHOT"
 
@@ -18,3 +18,4 @@ libraryDependencies ++=
 libraryDependencies += "com.github.scala-incubator.io" %% "scala-io-core" % "0.2.0"
 
 libraryDependencies +=  "com.github.scala-incubator.io" %% "scala-io-file" % "0.2.0"
+
